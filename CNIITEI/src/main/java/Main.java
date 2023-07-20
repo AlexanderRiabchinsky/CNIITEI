@@ -1,17 +1,14 @@
 package main.java;
 
-import lombok.Getter;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import javax.xml.bind.annotation.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
-import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -20,7 +17,7 @@ public class Main {
     public static void main(String[] args) {
         Main d = new Main();
         d.firstTask();
-        System.out.println("\n\n\n");
+        System.out.println("\n\n");
         d.secondTask();
     }
 
@@ -52,7 +49,6 @@ public class Main {
                                     + entry.getAttributes().getNamedItem("NAME").getTextContent());
                 }
             }
-
         } catch (ParserConfigurationException | SAXException | IOException ex) {
             ex.printStackTrace(System.out);
         }
@@ -61,16 +57,39 @@ public class Main {
             System.out.println(key + ": " + result.get(key));
         }
     }
-
     public void secondTask() {
         String addressType = "проезд";
         Set<String> result = new HashSet<>();
         Map<String, String> parents = new HashMap<>();
         parents = parentsSearch();
-//        for (String key : parents.keySet()) {
-//            System.out.println(key + ": " + parents.get(key));
-//        }
+        try {
+            DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            Document document = documentBuilder.parse("AS_ADDR_OBJ.XML");
+            Node root = document.getDocumentElement();
+            NodeList entries = root.getOwnerDocument().getElementsByTagName("OBJECT");
 
+            for (int i = 0; i < entries.getLength(); i++) {
+                Node entry = entries.item(i);
+                String typeName = entry.getAttributes().getNamedItem("TYPENAME").getTextContent();
+                String name = entry.getAttributes().getNamedItem("NAME").getTextContent();
+                String objectId = entry.getAttributes().getNamedItem("OBJECTID").getTextContent();
+                if (typeName.equals(addressType)
+                        && entry.getAttributes().getNamedItem("ISACTUAL").getTextContent().equals("1")) {
+                    StringBuilder sb = new StringBuilder(typeName + " " + name);
+                    while (!objectId.equals("0")) {
+                        String[] cycle = new String[2];
+                        cycle = detailsSearch(objectId);
+                        objectId = parents.get(objectId);
+                        typeName = cycle[0];
+                        name = cycle[1];
+                        sb.insert(0, typeName + " " + name + ", ");
+                    }
+                    result.add(sb.toString());
+                }
+            }
+        } catch (ParserConfigurationException | SAXException | IOException ex) {
+            ex.printStackTrace(System.out);
+        }
 
         Iterator itr = result.iterator();
         while (itr.hasNext()) {
@@ -88,67 +107,36 @@ public class Main {
             for (int i = 0; i < entries.getLength(); i++) {
                 Node entry = entries.item(i);
 
-                if (entry.getAttributes()
-                        .getNamedItem("ISACTIVE").getTextContent().equals("1")) {
+                if (entry.getAttributes().getNamedItem("ISACTIVE").getTextContent().equals("1")) {
                     result.put(entry.getAttributes().getNamedItem("OBJECTID").getTextContent(),
                             entry.getAttributes().getNamedItem("PARENTOBJID").getTextContent());
                 }
             }
-
         } catch (ParserConfigurationException | SAXException | IOException ex) {
             ex.printStackTrace(System.out);
         }
         return result;
     }
+    public String[] detailsSearch(String objectId) {
+        String[] details = new String[2];
 
+        try {
+            DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            Document document = documentBuilder.parse("AS_ADDR_OBJ.XML");
+            Node root = document.getDocumentElement();
+            NodeList entries = root.getOwnerDocument().getElementsByTagName("OBJECT");
 
-    @XmlAccessorType(XmlAccessType.FIELD)
-    @XmlType
-    @XmlRootElement(name = "ADDRESSOBJECTS")
-    @Getter
-    public static class AddressObjects implements Serializable {
-        private static final long serialVersionUID = 1L;
-        @XmlElementWrapper(name = "ADDRESSOBJECTS")
-        @XmlElement
-        List<AddressData> list = new ArrayList<AddressData>();
-    }
-
-    @XmlAccessorType(XmlAccessType.FIELD)
-    @XmlType
-    @XmlRootElement()
-    @Getter
-    public static class AddressData implements Serializable {
-        private static final long serialVersionUID = 1L;
-
-        @XmlAttribute(name = "OBJECT ISACTIVE")
-        private String objectIsActive;
-        @XmlAttribute(name = "ISACTUAL")
-        private String isActual;
-        @XmlAttribute(name = "ENDDATE")
-        private String endDate;
-        @XmlAttribute(name = "STARTDATE")
-        private String startDate;
-        @XmlAttribute(name = "UPDATEDATE")
-        private String updateDate;
-        @XmlAttribute(name = "NEXTID")
-        private String nextId;
-        @XmlAttribute(name = "PREVID")
-        private String prevId;
-        @XmlAttribute(name = "OPERTYPEID")
-        private String operTypeId;
-        @XmlAttribute(name = "LEVEL")
-        private String level;
-        @XmlAttribute(name = "TYPENAME")
-        private String typeName;
-        @XmlAttribute(name = "NAME")
-        private String name;
-        @XmlAttribute(name = "CHANGEID")
-        private String changeId;
-        @XmlAttribute(name = "OBJECTGUID")
-        private String objectGUID;
-        @XmlAttribute(name = "OBJECTID")
-        private String objectId;
-        @XmlAttribute(name = "ID")
-        private String id;
+            for (int i = 0; i < entries.getLength(); i++) {
+                Node entry = entries.item(i);
+                if (entry.getAttributes().getNamedItem("OBJECTID").getTextContent().equals(objectId)
+                        && entry.getAttributes().getNamedItem("ISACTUAL").getTextContent().equals("1")) {
+                    details[0] = entry.getAttributes().getNamedItem("TYPENAME").getTextContent();
+                    details[1] = entry.getAttributes().getNamedItem("NAME").getTextContent();
+                }
+            }
+        } catch (ParserConfigurationException | SAXException | IOException ex) {
+            ex.printStackTrace(System.out);
+        }
+        return details;
     }
 }
