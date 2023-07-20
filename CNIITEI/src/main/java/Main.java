@@ -12,6 +12,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -24,39 +25,32 @@ public class Main {
 
     public void firstTask() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.getDefault());
+        /**Вводится строковая дата проверки адресов*/
         String dateToCheck = "2010-01-01";
-        String idToCheck = "1422396, 1450759, 1449192, 1451562";
+        LocalDate dayToCheck = LocalDate.parse((CharSequence) dateToCheck, formatter);
+        /**Вводится строка проверяемых OBJECTID*/
+        String idToCheck = "1422396, 1450759, 1449192, 1451562, 1417838";
         Map<String, String> result = new HashMap<>();
         String[] idArray = idToCheck.split(", ");
-
-        for (String word : idArray) {
-            System.out.println(word);
-        }
-
-        /**       try {
-         File xmlFile = new File("AS_ADDR_OBJ.XML");
-         JAXBContext context = JAXBContext.newInstance(AddressObjects.class);
-         Unmarshaller unmarshaller = context.createUnmarshaller();
-         AddressObjects unmarshal = (AddressObjects) unmarshaller.unmarshal(xmlFile);
-
-         System.out.println("list:"+unmarshal.getList());
-         System.out.println("class:"+unmarshal.getClass());
-         //            System.out.println("buy:"+unmarshal.getList().get(1));
-         //            System.out.println("sale:"+unmarshal.getList().get(2));
-
-         } catch (JAXBException ex) {ex.printStackTrace(System.out);}*/
 
         try {
             DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             Document document = documentBuilder.parse("AS_ADDR_OBJ.XML");
             Node root = document.getDocumentElement();
-
             NodeList entries = root.getOwnerDocument().getElementsByTagName("OBJECT");
-            System.out.println(entries.getLength());
+
             for (int i = 0; i < entries.getLength(); i++) {
                 Node entry = entries.item(i);
-                if (Arrays.asList(idArray).contains(entry.getAttributes().getNamedItem("OBJECTID").getTextContent())) {
-                    result.put(entry.getAttributes().getNamedItem("OBJECTID").getTextContent(), entry.getAttributes().getNamedItem("TYPENAME").getTextContent() + " " + entry.getAttributes().getNamedItem("NAME").getTextContent());
+                LocalDate startDate = LocalDate.parse((CharSequence) entry.getAttributes().getNamedItem("STARTDATE").getTextContent(), formatter);
+                LocalDate endDate = LocalDate.parse((CharSequence) entry.getAttributes().getNamedItem("ENDDATE").getTextContent(), formatter);
+                if (Arrays.asList(idArray).contains(entry.getAttributes()
+                        .getNamedItem("OBJECTID").getTextContent())&&(dayToCheck.isAfter(startDate)
+                        &&((dayToCheck.isBefore(endDate)||dayToCheck.equals(endDate))))) {
+                    result.put(entry.getAttributes().getNamedItem("OBJECTID").getTextContent(),
+                            entry.getAttributes().getNamedItem("TYPENAME").getTextContent() + " "
+                                    + entry.getAttributes().getNamedItem("NAME").getTextContent());
+//                    System.out.println(entry.getAttributes().getNamedItem("OBJECTID").getTextContent());
+//                    System.out.println("start "+startDate+" check "+dayToCheck+" end "+endDate);
                 }
             }
 
