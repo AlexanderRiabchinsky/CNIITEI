@@ -27,7 +27,7 @@ public class Main {
         String dateToCheck = "2010-01-01";
         LocalDate dayToCheck = LocalDate.parse((CharSequence) dateToCheck, formatter);
         /**Вводится строка проверяемых OBJECTID*/
-        String idToCheck = "1422396, 1450759, 1449192, 1451562, 1417838";
+        String idToCheck = "1422396, 1450759, 1449192, 1451562, 1454609";
         Map<String, String> result = new HashMap<>();
         String[] idArray = idToCheck.split(", ");
 
@@ -75,7 +75,7 @@ public class Main {
                 String objectId = entry.getAttributes().getNamedItem("OBJECTID").getTextContent();
                 if (typeName.equals(addressType)
                         && entry.getAttributes().getNamedItem("ISACTUAL").getTextContent().equals("1")) {
-                    StringBuilder sb = new StringBuilder(typeName + " " + name);
+                    StringBuilder sb = new StringBuilder();
                     while (!objectId.equals("0")) {
                         String[] cycle = new String[2];
                         cycle = detailsSearch(objectId);
