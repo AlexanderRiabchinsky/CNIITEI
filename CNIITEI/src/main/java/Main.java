@@ -20,6 +20,7 @@ public class Main {
     public static void main(String[] args) {
         Main d = new Main();
         d.firstTask();
+        System.out.println("\n\n\n");
         d.secondTask();
     }
 
@@ -44,21 +45,15 @@ public class Main {
                 LocalDate startDate = LocalDate.parse((CharSequence) entry.getAttributes().getNamedItem("STARTDATE").getTextContent(), formatter);
                 LocalDate endDate = LocalDate.parse((CharSequence) entry.getAttributes().getNamedItem("ENDDATE").getTextContent(), formatter);
                 if (Arrays.asList(idArray).contains(entry.getAttributes()
-                        .getNamedItem("OBJECTID").getTextContent())&&(dayToCheck.isAfter(startDate)
-                        &&((dayToCheck.isBefore(endDate)||dayToCheck.equals(endDate))))) {
+                        .getNamedItem("OBJECTID").getTextContent()) && (dayToCheck.isAfter(startDate)
+                        && ((dayToCheck.isBefore(endDate) || dayToCheck.equals(endDate))))) {
                     result.put(entry.getAttributes().getNamedItem("OBJECTID").getTextContent(),
                             entry.getAttributes().getNamedItem("TYPENAME").getTextContent() + " "
                                     + entry.getAttributes().getNamedItem("NAME").getTextContent());
-//                    System.out.println(entry.getAttributes().getNamedItem("OBJECTID").getTextContent());
-//                    System.out.println("start "+startDate+" check "+dayToCheck+" end "+endDate);
                 }
             }
 
-        } catch (ParserConfigurationException ex) {
-            ex.printStackTrace(System.out);
-        } catch (SAXException ex) {
-            ex.printStackTrace(System.out);
-        } catch (IOException ex) {
+        } catch (ParserConfigurationException | SAXException | IOException ex) {
             ex.printStackTrace(System.out);
         }
 
@@ -68,6 +63,42 @@ public class Main {
     }
 
     public void secondTask() {
+        String addressType = "проезд";
+        Set<String> result = new HashSet<>();
+        Map<String, String> parents = new HashMap<>();
+        parents = parentsSearch();
+//        for (String key : parents.keySet()) {
+//            System.out.println(key + ": " + parents.get(key));
+//        }
+
+
+        Iterator itr = result.iterator();
+        while (itr.hasNext()) {
+            System.out.println(itr.next());
+        }
+    }
+
+    public Map<String, String> parentsSearch() {
+        Map<String, String> result = new HashMap<>();
+        try {
+            DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            Document document = documentBuilder.parse("AS_ADM_HIERARCHY.XML");
+            Node root = document.getDocumentElement();
+            NodeList entries = root.getOwnerDocument().getElementsByTagName("ITEM");
+            for (int i = 0; i < entries.getLength(); i++) {
+                Node entry = entries.item(i);
+
+                if (entry.getAttributes()
+                        .getNamedItem("ISACTIVE").getTextContent().equals("1")) {
+                    result.put(entry.getAttributes().getNamedItem("OBJECTID").getTextContent(),
+                            entry.getAttributes().getNamedItem("PARENTOBJID").getTextContent());
+                }
+            }
+
+        } catch (ParserConfigurationException | SAXException | IOException ex) {
+            ex.printStackTrace(System.out);
+        }
+        return result;
     }
 
 
