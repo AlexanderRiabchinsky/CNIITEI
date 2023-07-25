@@ -84,7 +84,7 @@ public class Main {
                         name = cycle[1];
                         sb.insert(0, typeName + " " + name + ", ");
                     }
-                    result.add(sb.toString());
+                    result.add(sb.toString().substring(0, sb.length() - 2));
                 }
             }
         } catch (ParserConfigurationException | SAXException | IOException ex) {
